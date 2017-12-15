@@ -52,8 +52,8 @@ func (this *CustomAgent) OnInit(gate gate.Gate,conn network.Conn)error{
 	log.Info("CustomAgent","OnInit")
 	this.conn=conn
 	this.gate=gate
-	this.r=bufio.NewReader(conn)
-	this.w=bufio.NewWriter(conn)
+	this.r=bufio.NewReaderSize(conn,256)
+	this.w=bufio.NewWriterSize(conn,256)
 	this.isclose=false
 	this.rev_num=0
 	this.send_num=0
