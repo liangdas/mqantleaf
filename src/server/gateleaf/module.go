@@ -33,7 +33,6 @@ func (gate *GateLeaf) Version() string {
 
 //与客户端通信的自定义粘包示例，需要mqant v1.6.4版本以上才能运行
 //该示例只用于简单的演示，并没有实现具体的粘包协议
-//去掉下面方法的注释就能启用这个自定义的粘包处理了，但也会造成demo都无法正常通行，因为demo都是用的mqtt粘包协议
 func (this *GateLeaf)CreateAgent() gate.Agent{
 	agent:= NewAgent(this)
 	return agent
@@ -46,34 +45,18 @@ func (gate *GateLeaf) OnInit(app module.App, settings *conf.ModuleSettings) {
 
 	//与客户端通信的自定义粘包示例，需要mqant v1.6.4版本以上才能运行
 	//该示例只用于简单的演示，并没有实现具体的粘包协议
-	//去掉下面一行的注释就能启用这个自定义的粘包处理了，但也会造成demo都无法正常通行，因为demo都是用的mqtt粘包协议
 	gate.Gate.SetCreateAgent(gate.CreateAgent)
 
 	gate.Gate.SetSessionLearner(gate)
 	gate.Gate.SetStorageHandler(gate) //设置持久化处理器
-	gate.Gate.SetTracingHandler(gate) //设置分布式跟踪系统处理器
 }
-//当连接建立  并且MQTT协议握手成功
+//当连接建立
 func (this *GateLeaf) Connect(session gate.Session)  {
 	log.Info("客户端建立了链接")
 }
-//当连接关闭	或者客户端主动发送MQTT DisConnect命令 ,这个函数中Session无法再继续后续的设置操作，只能读取部分配置内容了
+//当连接关闭
 func (this *GateLeaf) DisConnect(session gate.Session) {
 	log.Info("客户端断开了链接")
-}
-/**
-是否需要对本次客户端请求进行跟踪
-*/
-func (gate *GateLeaf)OnRequestTracing(session gate.Session,topic string,msg []byte)bool{
-	if session.GetUserid()==""{
-		//没有登陆的用户不跟踪
-		return false
-	}
-	//if session.GetUserid()!="liangdas"{
-	//	//userId 不等于liangdas 的请求不跟踪
-	//	return false
-	//}
-	return true
 }
 
 /**
