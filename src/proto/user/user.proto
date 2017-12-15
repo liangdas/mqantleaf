@@ -1,0 +1,25 @@
+syntax = "proto2";
+// 代码风格
+//消息名：使用骆驼风格的大小写命名，即单词首字母大写
+//字段名：全部小写
+//枚举名：使用骆驼风格的大小写命名
+//枚举值：全部大写，使用下划线分隔
+
+package user;
+
+
+message LoginRequest {
+	required int32 uid = 1;
+    required int32 u1 = 2;
+    required string token = 3;
+    required string webservice_uuid = 4;
+    required int32 channel_id = 5;
+}
+
+message LoginSuccessResponse {
+
+}
+
+message LoginFailedResponse {
+	required string errorcode = 1;
+}
