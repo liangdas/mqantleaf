@@ -12,7 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 // 与leaf数据包解析的相关函数就放这里了
-package gateleaf
+package gatewsleaf
 
 import (
 	"encoding/binary"
@@ -34,40 +34,12 @@ func (this *CustomAgent) WriteMarshal(_id uint16, body []byte) error{
 }
 
 func (this *CustomAgent) Read() ([]byte, error) {
-	var b [4]byte
-	bufMsgLen := b[:this.lenMsgLen]
-
-	// read len
-	if _, err := io.ReadFull(this.r, bufMsgLen); err != nil {
+	msgData := make([]byte, 2048)
+	if count, err := io.ReadAtLeast(this.r, msgData,2); err != nil {
 		return nil, err
+	}else{
+		return msgData[:count], nil
 	}
-
-	// parse len
-	var msgLen uint32
-	switch this.lenMsgLen {
-	case 1:
-		msgLen = uint32(bufMsgLen[0])
-	case 2:
-		if this.littleEndian {
-			msgLen = uint32(binary.LittleEndian.Uint16(bufMsgLen))
-		} else {
-			msgLen = uint32(binary.BigEndian.Uint16(bufMsgLen))
-		}
-	case 4:
-		if this.littleEndian {
-			msgLen = binary.LittleEndian.Uint32(bufMsgLen)
-		} else {
-			msgLen = binary.BigEndian.Uint32(bufMsgLen)
-		}
-	}
-
-	// data
-	msgData := make([]byte, msgLen)
-	if _, err := io.ReadFull(this.r, msgData); err != nil {
-		return nil, err
-	}
-
-	return msgData, nil
 }
 func (this *CustomAgent) Write(args ...[]byte) error {
 	// get len
@@ -77,33 +49,20 @@ func (this *CustomAgent) Write(args ...[]byte) error {
 	}
 
 
-
-	msg := make([]byte, uint32(this.lenMsgLen)+msgLen)
-
-	// write len
-	switch this.lenMsgLen {
-	case 1:
-		msg[0] = byte(msgLen)
-	case 2:
-		if this.littleEndian {
-			binary.LittleEndian.PutUint16(msg, uint16(msgLen))
-		} else {
-			binary.BigEndian.PutUint16(msg, uint16(msgLen))
-		}
-	case 4:
-		if this.littleEndian {
-			binary.LittleEndian.PutUint32(msg, msgLen)
-		} else {
-			binary.BigEndian.PutUint32(msg, msgLen)
-		}
+	// don't copy
+	if len(args) == 1 {
+		this.w.Write(args[0])
+		return nil
 	}
 
-	// write data
-	l := this.lenMsgLen
+	// merge the args
+	msg := make([]byte, msgLen)
+	l := 0
 	for i := 0; i < len(args); i++ {
 		copy(msg[l:], args[i])
 		l += len(args[i])
 	}
+
 	//粘包完成后调下面的语句发送数据
 	this.w.Write(msg)
 	return this.w.Flush()
